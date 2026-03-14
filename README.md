@@ -214,8 +214,3 @@ venv/
 - Switch to **Matrix Factorisation (SVD)** for better recommendations
 - Deploy to **Render / Railway / Fly.io**
 
----
-
-## 📄 License
-
-MIT — free to use, modify, and distribute.
