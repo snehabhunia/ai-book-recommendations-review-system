@@ -1,217 +1,147 @@
-/* script.js — Folio: live search, star picker, review submission
-   Uses jQuery for DOM manipulation and AJAX; vanilla JS for small helpers.
-   ─────────────────────────────────────────────────────────────────────── */
-
+/* script.js — Folio: live search, star picker, review form (jQuery) */
 "use strict";
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-function starsHtml(avg, total = 5) {
-  let h = "";
-  for (let i = 1; i <= total; i++)
-    h += `<span class="star${i <= Math.round(avg) ? "" : " off"}">★</span>`;
-  return h;
+// ── Escape HTML safely ────────────────────────────────────────────────────────
+function esc(s) { return $("<div>").text(s).html(); }
+
+// ── Star string helper ────────────────────────────────────────────────────────
+function starsHtml(avg) {
+  const n = Math.round(avg);
+  return "★".repeat(n) + "☆".repeat(5 - n);
 }
 
-function escHtml(s) {
-  return $("<div>").text(s).html(); // jQuery-safe escaping
-}
-
-// ── Image fallback ───────────────────────────────────────────────────────────
-function attachImgFallbacks() {
-  $("img.book-img").on("error", function () {
-    const $ph = $(this).closest(".book-cover").find(".book-cover-placeholder");
-    if ($ph.length) {
-      $(this).hide();
-      $ph.show();
-    } else {
-      $(this).hide();
-    }
-  });
-}
-
-// ── Stagger card animation ────────────────────────────────────────────────────
+// ── Stagger card fade-in ──────────────────────────────────────────────────────
 function staggerCards() {
   $(".book-card").each(function (i) {
-    const $card = $(this);
-    $card.css({ opacity: 0, transform: "translateY(16px)" });
-    setTimeout(() => {
-      $card.css({
-        transition: "opacity .4s ease, transform .4s ease",
-        opacity: 1,
-        transform: "translateY(0)",
-      });
-    }, 30 + i * 32);
+    $(this).css({ opacity: 0 });
+    setTimeout(() => $(this).css({ transition: "opacity .4s", opacity: 1 }), i * 40);
   });
 }
 
-// ════════════════════════ LIVE SEARCH (jQuery AJAX) ═══════════════════════════
+// ════════════════════════ LIVE SEARCH ════════════════════════════════════════
 function initLiveSearch() {
-  const $input    = $(".search-form input[name='q']").first();
+  const $input    = $("#searchInput");
   const $dropdown = $("#searchDropdown");
-  const $clearBtn = $(".search-clear").first();
   if (!$input.length || !$dropdown.length) return;
 
-  let debounce = null;
+  let timer;
 
-  function showDropdown(html) {
-    $dropdown.html(html).addClass("active");
-  }
+  function show(html) { $dropdown.html(html).addClass("active"); }
+  function hide()      { $dropdown.removeClass("active"); }
 
-  function hideDropdown() {
-    $dropdown.removeClass("active");
-  }
-
-  function doSearch(q) {
-    if (!q || q.length < 2) { hideDropdown(); return; }
-    showDropdown('<div class="dropdown-loading"><i class="bi bi-hourglass-split me-1"></i>Searching…</div>');
-
+  function search(q) {
+    if (q.length < 2) { hide(); return; }
+    show('<div class="dropdown-loading">Searching…</div>');
     $.getJSON("/api/search", { q })
       .done(function (data) {
-        if (!data.length) {
-          showDropdown('<div class="dropdown-empty">No books found</div>');
-          return;
-        }
-        const items = data.slice(0, 8).map(function (b) {
-          const stars =
-            b.stats && b.stats.avg > 0
-              ? `<span class="dropdown-stars">${"★".repeat(Math.round(b.stats.avg))}${"☆".repeat(5 - Math.round(b.stats.avg))}</span>`
-              : "";
-          const thumb = b.image
-            ? `<img class="dropdown-thumb" src="${b.image}" onerror="this.style.display='none'" alt="" />`
-            : `<div class="dropdown-thumb-ph">📖</div>`;
-          return `<a class="dropdown-item" href="/book/${b.isbn}" role="option">
-            ${thumb}
-            <div class="dropdown-info">
-              <div class="dropdown-title">${escHtml(b.title)}</div>
-              <div class="dropdown-author">${escHtml(b.author)}${b.year ? " · " + b.year : ""}</div>
+        if (!data.length) { show('<div class="dropdown-empty">No books found</div>'); return; }
+        const html = data.slice(0, 8).map(b => `
+          <a class="dropdown-item" href="/book/${b.isbn}">
+            ${b.image ? `<img class="dropdown-thumb" src="${b.image}" onerror="this.style.display='none'" alt="" />` : '<div class="dropdown-thumb" style="background:#2a4a38;display:flex;align-items:center;justify-content:center;">📖</div>'}
+            <div>
+              <div class="dropdown-title">${esc(b.title)}</div>
+              <div class="dropdown-author">${esc(b.author)}${b.year ? " · " + b.year : ""}</div>
             </div>
-            ${stars}
-          </a>`;
-        });
-        showDropdown(items.join(""));
+          </a>`).join("");
+        show(html);
       })
-      .fail(function () { hideDropdown(); });
+      .fail(hide);
   }
 
-  // ── Input events ────────────────────────────────────────────────────────
   $input.on("input", function () {
-    clearTimeout(debounce);
+    clearTimeout(timer);
     const q = $(this).val().trim();
-    if (!q) { hideDropdown(); return; }
-    debounce = setTimeout(() => doSearch(q), 280);
+    if (!q) { hide(); return; }
+    timer = setTimeout(() => search(q), 280);
   });
 
   $input.on("focus", function () {
     const q = $(this).val().trim();
-    if (q.length >= 2) doSearch(q);
+    if (q.length >= 2) search(q);
   });
 
   $(document).on("click", function (e) {
-    if (!$(e.target).closest(".search-wrap").length) hideDropdown();
+    if (!$(e.target).closest(".search-wrap").length) hide();
   });
 
   $input.on("keydown", function (e) {
-    if (e.key === "Escape") { hideDropdown(); $(this).blur(); }
-    if (e.key === "Enter") { hideDropdown(); $(this).closest("form").submit(); }
-  });
-
-  // ── Clear button ─────────────────────────────────────────────────────────
-  $clearBtn.on("click", function () {
-    $input.val("").trigger("focus");
-    hideDropdown();
+    if (e.key === "Escape") { hide(); $(this).blur(); }
   });
 }
 
 // ════════════════════════ STAR PICKER ════════════════════════════════════════
 function initStarPicker() {
-  const $picker = $(".star-picker");
-  if (!$picker.length) return;
-
-  const $stars  = $picker.find(".sp-star");
-  const $label  = $("#starLabel");
+  const $stars  = $(".sp-star");
   const $input  = $("#starValue");
+  const $label  = $("#starLabel");
   const labels  = ["", "Terrible", "Poor", "OK", "Good", "Excellent"];
   let selected  = 0;
 
-  function illuminate(n) {
+  if (!$stars.length) return;
+
+  function light(n) {
     $stars.each(function (i) {
-      $(this)
-        .toggleClass("lit", i < n)
-        .text(i < n ? "★" : "☆");
+      $(this).toggleClass("lit", i < n).text(i < n ? "★" : "☆");
     });
-    $label.text(n > 0 ? labels[n] : "Select rating");
+    $label.text(n ? labels[n] : "Select rating");
   }
 
   $stars
-    .on("mouseenter", function () { illuminate(parseInt($(this).data("val"))); })
-    .on("mouseleave", function () { illuminate(selected); })
-    .on("click keydown", function (e) {
-      if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return;
-      selected = parseInt($(this).data("val"));
+    .on("mouseenter", function () { light(+$(this).data("val")); })
+    .on("mouseleave", function () { light(selected); })
+    .on("click", function () {
+      selected = +$(this).data("val");
       $input.val(selected);
-      illuminate(selected);
-      // Clear star validation error
+      light(selected);
       $("#starsError").hide();
-      $(this).closest(".form-row").find("input[type=hidden]").removeClass("is-invalid");
     });
 }
 
 // ════════════════════════ CHARACTER COUNTER ═══════════════════════════════════
 function initCharCounter() {
-  const $ta    = $("#reviewComment");
-  const $count = $("#commentCount");
-  if (!$ta.length) return;
-  $ta.on("input", function () {
-    const len = $(this).val().length;
-    $count.text(`${len} / 2000`);
-    $count.toggleClass("text-danger", len > 1900);
+  $("#reviewComment").on("input", function () {
+    const n = $(this).val().length;
+    $("#commentCount").text(n + " / 2000").toggleClass("text-danger", n > 1900);
   });
 }
 
 // ════════════════════════ FORM VALIDATION ════════════════════════════════════
-function validateReviewForm(name, stars, comment) {
-  let valid = true;
+function validateForm(name, stars, comment) {
+  let ok = true;
 
-  // Name — optional, but if provided must be ≤ 80 chars
   if (name.length > 80) {
-    $("#nameError").text("Name must be 80 characters or fewer.").show();
+    $("#nameError").text("Name must be 80 chars or fewer.").show();
     $("#reviewerName").addClass("is-invalid");
-    valid = false;
+    ok = false;
   } else {
     $("#nameError").hide();
-    $("#reviewerName").removeClass("is-invalid").addClass("is-valid");
+    $("#reviewerName").removeClass("is-invalid");
   }
 
-  // Stars — required
-  if (!stars || stars < 1 || stars > 5) {
+  if (stars < 1 || stars > 5) {
     $("#starsError").text("Please select a star rating.").show();
-    valid = false;
+    ok = false;
   } else {
     $("#starsError").hide();
   }
 
-  // Comment — required, min 5 chars
-  const commentVal = comment.trim();
-  if (commentVal.length < 5) {
-    const msg = commentVal.length === 0
-      ? "A review comment is required."
-      : "Comment must be at least 5 characters.";
-    $("#commentError").text(msg).show();
+  if (comment.length < 5) {
+    $("#commentError").text(comment.length === 0 ? "Review is required." : "Min 5 characters.").show();
     $("#reviewComment").addClass("is-invalid");
-    valid = false;
-  } else if (commentVal.length > 2000) {
-    $("#commentError").text("Comment must be 2000 characters or fewer.").show();
+    ok = false;
+  } else if (comment.length > 2000) {
+    $("#commentError").text("Max 2000 characters.").show();
     $("#reviewComment").addClass("is-invalid");
-    valid = false;
+    ok = false;
   } else {
     $("#commentError").hide();
-    $("#reviewComment").removeClass("is-invalid").addClass("is-valid");
+    $("#reviewComment").removeClass("is-invalid");
   }
 
-  return valid;
+  return ok;
 }
 
-// ════════════════════════ SUBMIT REVIEW (jQuery AJAX) ════════════════════════
+// ════════════════════════ REVIEW FORM ════════════════════════════════════════
 function initReviewForm() {
   const $form = $("#reviewForm");
   if (!$form.length) return;
@@ -221,110 +151,69 @@ function initReviewForm() {
 
     const isbn    = $form.data("isbn");
     const name    = $("#reviewerName").val().trim();
-    const stars   = parseInt($("#starValue").val(), 10);
+    const stars   = +$("#starValue").val();
     const comment = $("#reviewComment").val().trim();
-    const $btn    = $form.find(".submit-review-btn");
+    const $btn    = $form.find("button[type=submit]");
 
-    // Client-side validation
-    if (!validateReviewForm(name, stars, comment)) return;
+    if (!validateForm(name, stars, comment)) return;
 
-    // Disable button, show loading
     $btn.prop("disabled", true).html('<i class="bi bi-hourglass-split me-1"></i>Posting…');
     $("#reviewError").hide();
-    $("#reviewSuccess").removeClass("show");
+    $("#reviewSuccess").addClass("d-none");
 
     $.ajax({
-      url:         "/api/review",
-      type:        "POST",
+      url: "/api/review", type: "POST",
       contentType: "application/json",
-      data:        JSON.stringify({ isbn, name: name || "Anonymous", stars, comment }),
+      data: JSON.stringify({ isbn, name: name || "Anonymous", stars, comment })
     })
-      .done(function (data) {
-        if (data.ok) {
-          prependReview(data.review);
-          updateRatingSummary(data.stats);
+    .done(function (data) {
+      if (!data.ok) return;
 
-          // Success message
-          $("#reviewSuccess").addClass("show");
-          setTimeout(() => $("#reviewSuccess").removeClass("show"), 4000);
+      // Prepend new review card
+      $("#noReviewsPlaceholder").remove();
+      const stars_html = "★".repeat(data.review.stars) + "☆".repeat(5 - data.review.stars);
+      $("#reviewsList").prepend(`
+        <div class="card mb-3 shadow-sm" style="animation:fadeIn .4s ease">
+          <div class="card-body">
+            <div class="d-flex justify-content-between flex-wrap gap-1">
+              <div><strong>${esc(data.review.name)}</strong>
+                <span class="text-warning ms-2">${stars_html}</span></div>
+              <small class="text-muted">${esc(data.review.created)}</small>
+            </div>
+            <p class="mt-2 mb-0">${esc(data.review.comment)}</p>
+          </div>
+        </div>`);
 
-          // Reset form
-          $("#reviewerName").val("").removeClass("is-valid is-invalid");
-          $("#reviewComment").val("").removeClass("is-valid is-invalid");
-          $("#starValue").val("0");
-          $("#commentCount").text("0 / 2000");
-          $form.find(".sp-star").removeClass("lit").text("☆");
-          $("#starLabel").text("Select rating");
-        }
-      })
-      .fail(function (xhr) {
-        const resp = xhr.responseJSON;
-        const msg  = resp && resp.errors ? resp.errors.join(" ") : "Something went wrong. Please try again.";
-        $("#reviewError").text(msg).show();
-      })
-      .always(function () {
-        $btn.prop("disabled", false).html('<i class="bi bi-send me-1"></i>Post Review');
-      });
+      // Update rating summary
+      const s = data.stats;
+      $("#avgScore").text(s.avg > 0 ? s.avg.toFixed(1) : "—");
+      $("#summaryStars").text(starsHtml(s.avg));
+      $("#reviewCount").text(s.count + " review" + (s.count === 1 ? "" : "s"));
+
+      // Show success, reset form
+      $("#reviewSuccess").removeClass("d-none");
+      setTimeout(() => $("#reviewSuccess").addClass("d-none"), 4000);
+      $form[0].reset();
+      $("#starValue").val("0");
+      $(".sp-star").removeClass("lit").text("☆");
+      $("#starLabel").text("Select rating");
+      $("#commentCount").text("0 / 2000");
+    })
+    .fail(function (xhr) {
+      const msg = xhr.responseJSON?.errors?.join(" ") || "Something went wrong. Try again.";
+      $("#reviewError").text(msg).show();
+    })
+    .always(function () {
+      $btn.prop("disabled", false).html('<i class="bi bi-send me-1"></i>Post Review');
+    });
   });
 }
 
-// ── DOM helpers ──────────────────────────────────────────────────────────────
-function prependReview(r) {
-  const $list = $("#reviewsList");
-  if (!$list.length) return;
-
-  // Remove placeholder
-  $list.find("#noReviewsPlaceholder").remove();
-
-  const starsMarkup = Array.from({ length: 5 }, (_, i) =>
-    `<span class="star${i < r.stars ? "" : " off"}">★</span>`
-  ).join("");
-
-  const $card = $(`
-    <article class="review-card" style="animation:fadeUp .4s ease both">
-      <div class="review-header">
-        <div>
-          <p class="reviewer-name">${escHtml(r.name)}</p>
-          <div class="review-stars" aria-label="${r.stars} out of 5">${starsMarkup}</div>
-        </div>
-        <time class="review-date">${escHtml(r.created)}</time>
-      </div>
-      <p class="review-text">${escHtml(r.comment)}</p>
-    </article>
-  `);
-
-  $list.prepend($card);
-}
-
-function updateRatingSummary(stats) {
-  $("#avgScore").text(stats.avg > 0 ? stats.avg.toFixed(1) : "—");
-  $("#reviewCount").text(`${stats.count} review${stats.count === 1 ? "" : "s"}`);
-  $("#summaryStars").html(starsHtml(stats.avg));
-}
-
-// ════════════════════════ SCROLL TO RESULTS ═══════════════════════════════════
-function scrollToResults() {
-  const $el = $("#results");
-  if ($el.length) {
-    setTimeout(() => $("html, body").animate({ scrollTop: $el.offset().top - 80 }, 400), 150);
-  }
-}
-
-// ════════════════════════ BOOTSTRAP TOOLTIPS ═════════════════════════════════
-function initTooltips() {
-  $('[data-bs-toggle="tooltip"]').each(function () {
-    new bootstrap.Tooltip(this);
-  });
-}
-
-// ═══════════════════════════ INIT (jQuery ready) ══════════════════════════════
+// ════════════════════════ INIT ════════════════════════════════════════════════
 $(function () {
-  attachImgFallbacks();
   staggerCards();
   initLiveSearch();
   initStarPicker();
   initCharCounter();
   initReviewForm();
-  scrollToResults();
-  initTooltips();
 });

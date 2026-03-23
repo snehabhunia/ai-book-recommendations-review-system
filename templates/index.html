@@ -3,385 +3,313 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Folio{% if page == 'detail' and book %} — {{ book.title }}{% elif page == 'search' %} — Search{% else %} — Book Reviews & Recommendations{% endif %}</title>
-
-  <!-- Bootstrap 5 CSS -->
+  <title>Folio — Book Reviews & Recommendations</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
-  <!-- Custom CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
 
-<!-- ═══════════════════════ HEADER / NAV ═══════════════════════════════════ -->
+<!-- HEADER -->
 <header>
-  <nav class="navbar navbar-expand-md" aria-label="Main navigation">
-    <a class="logo navbar-brand me-3" href="{{ url_for('index') }}">
-      📚 Folio <span>reads</span>
-    </a>
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark px-3">
+    <a class="navbar-brand fw-bold text-warning font-serif" href="{{ url_for('index') }}">📚 Folio</a>
 
-    <!-- Search form (visible on md+) -->
-    <div class="search-wrap d-none d-md-block">
-      <form class="search-form" action="{{ url_for('search') }}" method="get" role="search" id="mainSearchForm" novalidate>
-        <span class="search-icon"><i class="bi bi-search"></i></span>
-        <input type="search" name="q" id="searchInput"
-               placeholder="Search books or authors…"
-               value="{{ query if page=='search' else '' }}"
-               autocomplete="off" aria-label="Search books" />
-        <button type="button" class="search-clear" aria-label="Clear search">✕</button>
-        <button type="submit" class="search-btn">Search</button>
-      </form>
-      <!-- Live dropdown -->
-      <div class="search-dropdown" id="searchDropdown" role="listbox" aria-label="Search suggestions"></div>
-    </div>
-
-    <!-- Mobile hamburger -->
-    <button class="navbar-toggler ms-auto border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-expanded="false" aria-label="Toggle navigation">
-      <i class="bi bi-list text-white fs-4"></i>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
     </button>
 
-    <!-- Nav links (desktop) -->
-    <div class="d-none d-md-flex align-items-center gap-3 ms-3">
-      <a href="{{ url_for('index') }}" class="nav-link text-white{% if page=='home' %} active{% endif %}">
-        <i class="bi bi-house me-1"></i>Home
-      </a>
-    </div>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <!-- Search bar -->
+      <div class="search-wrap mx-auto my-2 my-md-0 position-relative" style="max-width:480px;width:100%;">
+        <form class="d-flex" action="{{ url_for('search') }}" method="get" role="search">
+          <input class="form-control me-2" type="search" name="q" id="searchInput"
+                 placeholder="Search books or authors…"
+                 value="{{ query if page=='search' else '' }}"
+                 autocomplete="off" />
+          <button class="btn btn-warning fw-semibold" type="submit">Search</button>
+        </form>
+        <div id="searchDropdown" class="search-dropdown"></div>
+      </div>
 
-    <!-- Mobile collapse -->
-    <div class="collapse navbar-collapse mt-2" id="mobileMenu">
-      <form class="search-form d-md-none w-100 mb-2" action="{{ url_for('search') }}" method="get" role="search">
-        <span class="search-icon"><i class="bi bi-search"></i></span>
-        <input type="search" name="q" placeholder="Search…" value="{{ query if page=='search' else '' }}" />
-        <button type="submit" class="search-btn">Go</button>
-      </form>
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link {% if page=='home' %}active{% endif %}" href="{{ url_for('index') }}">
+            <i class="bi bi-house"></i> Home
+          </a>
+        </li>
+      </ul>
     </div>
   </nav>
 </header>
 
-<!-- ═══════════════════════════ MAIN CONTENT ═══════════════════════════════ -->
+<!-- MAIN -->
 <main>
 
-  {# ─── HOME PAGE ─────────────────────────────────────────────────────── #}
+  {# ── HOME ── #}
   {% if page == 'home' %}
 
-  <section class="hero" aria-labelledby="heroTitle">
-    <div class="hero-lines" aria-hidden="true">
-      <span></span><span></span><span></span>
-    </div>
-    <p class="hero-eyebrow">Community-Powered Discovery</p>
-    <h1 id="heroTitle">Find Your Next <em>Great Read</em></h1>
-    <p>Collaborative-filtering recommendations, live search, and honest reviews — all in one place.</p>
-    <!-- Mobile search -->
-    <form class="hero-search d-md-none mt-4" action="{{ url_for('search') }}" method="get" role="search">
-      <div class="input-group input-group-lg" style="max-width:440px;margin:0 auto;">
-        <input type="search" class="form-control" name="q" placeholder="Search books or authors…" aria-label="Search" />
-        <button class="btn btn-warning fw-semibold" type="submit">Search</button>
-      </div>
-    </form>
+  <section class="hero text-center text-white py-5">
+    <h1 class="display-4 fw-bold">Find Your Next <span class="text-warning fst-italic">Great Read</span></h1>
+    <p class="lead opacity-75">AI-powered recommendations, live search, and honest reviews.</p>
   </section>
 
-  {% if books %}
-  <section aria-labelledby="trendingTitle">
-    <div class="section-header">
-      <h2 class="section-title" id="trendingTitle">Trending Books</h2>
-      <small class="text-muted">Most-rated in our dataset</small>
-    </div>
-    <div class="books-grid px-3 pb-4" id="results">
-      {% for book in books %}
-      <article class="book-card">
-        <a href="{{ url_for('book_detail', isbn=book.isbn) }}" class="book-link" aria-label="{{ book.title }} by {{ book.author }}">
-          <div class="book-cover">
-            {% if book.image %}
-              <img class="book-img" src="{{ book.image }}" alt="{{ book.title }} cover" loading="lazy" />
-            {% endif %}
-            <div class="book-cover-placeholder" {% if book.image %}style="display:none"{% endif %}>
-              <span class="icon">📖</span>
-              <span class="title-short">{{ book.title[:30] }}</span>
-            </div>
-          </div>
-          <div class="book-info">
-            <p class="book-title">{{ book.title }}</p>
-            <p class="book-author">{{ book.author }}</p>
-            {% if book.year %}<p class="book-year">{{ book.year }}</p>{% endif %}
-            {% if book.stats and book.stats.count > 0 %}
-            <div class="card-stars" aria-label="{{ book.stats.avg }} out of 5 stars">
-              {% for i in range(1, 6) %}
-                <span class="s{% if i > book.stats.avg|round %} off{% endif %}">★</span>
-              {% endfor %}
-              <span class="count">({{ book.stats.count }})</span>
-            </div>
-            {% endif %}
-          </div>
-        </a>
-      </article>
-      {% endfor %}
-    </div>
-  </section>
-  {% else %}
-  <!-- Model not trained yet — setup card -->
-  <div class="setup-card mx-auto mt-5">
-    <h2>⚙️ One-time setup needed</h2>
-    <div class="setup-step"><div class="step-num">1</div>
-      <p>Download the <strong>Books Recommendation Dataset</strong> from Kaggle and place <code>Books.csv</code>, <code>Ratings.csv</code>, <code>Users.csv</code> inside the <code>model/</code> folder.</p>
-    </div>
-    <div class="setup-step"><div class="step-num">2</div>
-      <p>Run <code>python model/train_model.py</code> — takes ~90 seconds and creates <code>model/model.pkl</code>.</p>
-    </div>
-    <div class="setup-step"><div class="step-num">3</div>
-      <p>Restart the app with <code>python app.py</code> and refresh this page.</p>
-    </div>
-    <a class="dataset-link" href="https://www.kaggle.com/datasets/arashnic/book-recommendation-dataset" target="_blank" rel="noopener">
-      <i class="bi bi-download me-1"></i> Download Dataset on Kaggle
-    </a>
-  </div>
-  {% endif %}
-
-
-  {# ─── SEARCH RESULTS PAGE ────────────────────────────────────────────── #}
-  {% elif page == 'search' %}
-
-  <section class="hero py-4" aria-labelledby="searchResultsTitle" style="padding:2.5rem 2rem;">
-    <h1 id="searchResultsTitle" class="h3 text-paper mb-0">
-      {% if query %}Results for <em>"{{ query }}"</em>{% else %}Search Books{% endif %}
-    </h1>
-  </section>
-
-  <section id="results" aria-label="Search results">
-    <div class="section-header">
-      <h2 class="section-title">
-        {% if books %}{{ books|length }} book{{ 's' if books|length != 1 else '' }} found{% else %}No results{% endif %}
-      </h2>
-    </div>
-
+  <section class="container-fluid px-4 py-4">
     {% if books %}
-    <div class="books-grid px-3 pb-4">
+    <h2 class="section-title mb-4">Trending Books</h2>
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3" id="results">
       {% for book in books %}
-      <article class="book-card">
-        <a href="{{ url_for('book_detail', isbn=book.isbn) }}" class="book-link" aria-label="{{ book.title }} by {{ book.author }}">
-          <div class="book-cover">
-            {% if book.image %}<img class="book-img" src="{{ book.image }}" alt="{{ book.title }} cover" loading="lazy" />{% endif %}
-            <div class="book-cover-placeholder" {% if book.image %}style="display:none"{% endif %}>
-              <span class="icon">📖</span>
-              <span class="title-short">{{ book.title[:30] }}</span>
+      <div class="col">
+        <a href="{{ url_for('book_detail', isbn=book.isbn) }}" class="text-decoration-none">
+          <div class="card h-100 book-card shadow-sm">
+            <img src="{{ book.image or '' }}" class="card-img-top book-img"
+                 alt="{{ book.title }}" loading="lazy" onerror="this.style.display='none'" />
+            <div class="card-body p-2">
+              <p class="card-title small fw-bold mb-1 text-clamp">{{ book.title }}</p>
+              <p class="text-muted mb-1" style="font-size:.72rem;">{{ book.author }}</p>
+              {% if book.stats and book.stats.count > 0 %}
+              <span class="text-warning" style="font-size:.7rem;">
+                {{ '★' * (book.stats.avg|round|int) }}{{ '☆' * (5 - book.stats.avg|round|int) }}
+                <span class="text-muted">({{ book.stats.count }})</span>
+              </span>
+              {% endif %}
             </div>
-          </div>
-          <div class="book-info">
-            <p class="book-title">{{ book.title }}</p>
-            <p class="book-author">{{ book.author }}</p>
-            {% if book.year %}<p class="book-year">{{ book.year }}</p>{% endif %}
-            {% if book.stats and book.stats.count > 0 %}
-            <div class="card-stars">
-              {% for i in range(1, 6) %}
-                <span class="s{% if i > book.stats.avg|round %} off{% endif %}">★</span>
-              {% endfor %}
-              <span class="count">({{ book.stats.count }})</span>
-            </div>
-            {% endif %}
           </div>
         </a>
-      </article>
+      </div>
       {% endfor %}
     </div>
+
     {% else %}
-    <div class="empty-state">
-      <div class="big-icon">🔍</div>
-      <h3>No books found{% if query %} for "{{ query }}"{% endif %}</h3>
-      <p class="text-muted mt-2">Try a different title or author name.</p>
-      <a href="{{ url_for('index') }}" class="btn btn-outline-secondary mt-3"><i class="bi bi-house me-1"></i>Back to home</a>
+    <div class="card mx-auto mt-5" style="max-width:600px;">
+      <div class="card-body">
+        <h5 class="card-title">⚙️ Setup Required</h5>
+        <ol class="mt-3">
+          <li>Download <strong>Books.csv</strong>, <strong>Ratings.csv</strong>, <strong>Users.csv</strong> from
+            <a href="https://www.kaggle.com/datasets/arashnic/book-recommendation-dataset" target="_blank">Kaggle</a>
+            and place them in <code>model/</code>.</li>
+          <li>Run <code>python model/train_model.py</code></li>
+          <li>Restart with <code>python app.py</code> and refresh.</li>
+        </ol>
+      </div>
     </div>
     {% endif %}
   </section>
 
 
-  {# ─── BOOK DETAIL PAGE ────────────────────────────────────────────────── #}
+  {# ── SEARCH ── #}
+  {% elif page == 'search' %}
+
+  <section class="hero text-white py-3 px-4">
+    <h2 class="mb-0">{% if query %}Results for "<em>{{ query }}</em>"{% else %}Search Books{% endif %}</h2>
+  </section>
+
+  <section class="container-fluid px-4 py-4" id="results">
+    {% if books %}
+    <p class="text-muted mb-3">{{ books|length }} book{{ 's' if books|length != 1 else '' }} found</p>
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
+      {% for book in books %}
+      <div class="col">
+        <a href="{{ url_for('book_detail', isbn=book.isbn) }}" class="text-decoration-none">
+          <div class="card h-100 book-card shadow-sm">
+            <img src="{{ book.image or '' }}" class="card-img-top book-img"
+                 alt="{{ book.title }}" loading="lazy" onerror="this.style.display='none'" />
+            <div class="card-body p-2">
+              <p class="card-title small fw-bold mb-1 text-clamp">{{ book.title }}</p>
+              <p class="text-muted mb-0" style="font-size:.72rem;">{{ book.author }}</p>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <p class="fs-1">🔍</p>
+      <h5>No books found{% if query %} for "{{ query }}"{% endif %}</h5>
+      <a href="{{ url_for('index') }}" class="btn btn-outline-secondary mt-2">Back to Home</a>
+    </div>
+    {% endif %}
+  </section>
+
+
+  {# ── BOOK DETAIL ── #}
   {% elif page == 'detail' and book %}
 
-  <!-- Book banner -->
-  <section class="book-detail-wrap" aria-labelledby="bookTitle">
-    <nav aria-label="Breadcrumb" class="mb-3">
-      <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{{ book.title[:40] }}{% if book.title|length > 40 %}…{% endif %}</li>
-      </ol>
-    </nav>
+  <nav class="container-fluid px-4 pt-3" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+      <li class="breadcrumb-item active">{{ book.title[:40] }}{% if book.title|length > 40 %}…{% endif %}</li>
+    </ol>
+  </nav>
 
-    <div class="selected-banner">
-      {% if book.image %}
-      <div class="selected-cover">
-        <img src="{{ book.image }}" alt="{{ book.title }} cover" />
-      </div>
-      {% else %}
-      <div class="selected-cover-ph" aria-hidden="true">📖</div>
-      {% endif %}
-
-      <div class="selected-meta">
-        <p class="selected-label">Book Detail</p>
-        <h1 class="selected-title" id="bookTitle">{{ book.title }}</h1>
-        <p class="selected-author">by {{ book.author }}</p>
-        {% if book.year %}<p class="selected-author mt-1">Published {{ book.year }}</p>{% endif %}
-        <p class="selected-isbn">ISBN: {{ book.isbn }}</p>
-
-        <!-- Rating summary -->
-        <div class="rating-summary" id="ratingSummary" aria-label="Rating summary">
-          <div class="big-score" id="avgScore">{{ "%.1f"|format(book.stats.avg) if book.stats.count > 0 else '—' }}</div>
-          <div class="rating-details">
-            <div class="stars-row" id="summaryStars" aria-hidden="true">
-              {% if book.stats.count > 0 %}
-                {% for i in range(1, 6) %}
-                  <span class="star{% if i > book.stats.avg|round %} off{% endif %}">★</span>
-                {% endfor %}
-              {% else %}
-                {% for i in range(5) %}<span class="star off">★</span>{% endfor %}
-              {% endif %}
+  <!-- Book Banner -->
+  <section class="bg-dark text-white py-4">
+    <div class="container-fluid px-4">
+      <div class="row g-3 align-items-start">
+        <div class="col-auto">
+          {% if book.image %}
+          <img src="{{ book.image }}" alt="{{ book.title }}" class="rounded shadow" style="width:110px;" />
+          {% else %}
+          <div class="bg-secondary rounded d-flex align-items-center justify-content-center"
+               style="width:110px;height:160px;font-size:2.5rem;">📖</div>
+          {% endif %}
+        </div>
+        <div class="col">
+          <small class="text-warning text-uppercase fw-bold">Book Detail</small>
+          <h1 class="h3 mt-1 mb-1">{{ book.title }}</h1>
+          <p class="text-white-50 mb-1">by {{ book.author }}{% if book.year %} · {{ book.year }}{% endif %}</p>
+          <p class="text-white-50 small">ISBN: {{ book.isbn }}</p>
+          <div class="d-flex align-items-center gap-3 mt-2">
+            <span class="display-6 fw-bold text-warning" id="avgScore">
+              {{ "%.1f"|format(book.stats.avg) if book.stats.count > 0 else '—' }}
+            </span>
+            <div>
+              <div id="summaryStars" class="text-warning fs-5">
+                {% if book.stats.count > 0 %}
+                  {{ '★' * (book.stats.avg|round|int) }}{{ '☆' * (5 - book.stats.avg|round|int) }}
+                {% else %}☆☆☆☆☆{% endif %}
+              </div>
+              <small class="text-white-50" id="reviewCount">
+                {{ book.stats.count }} review{{ 's' if book.stats.count != 1 else '' }}
+              </small>
             </div>
-            <p class="review-count" id="reviewCount">{{ book.stats.count }} review{{ 's' if book.stats.count != 1 else '' }}</p>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- AI Recommendations -->
+  <!-- Recommendations -->
   {% if recommendations %}
-  <section aria-labelledby="recsTitle">
-    <div class="section-header">
-      <h2 class="section-title" id="recsTitle">You Might Also Like</h2>
-      <small class="text-muted">AI-powered · cosine similarity</small>
-    </div>
-    <div class="books-grid px-3 pb-4">
+  <section class="container-fluid px-4 py-4">
+    <h2 class="section-title mb-3">You Might Also Like
+      <small class="text-muted fs-6 fw-normal">· AI-powered</small>
+    </h2>
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
       {% for rec in recommendations %}
-      <article class="book-card">
-        <a href="{{ url_for('book_detail', isbn=rec.isbn) }}" class="book-link">
-          <div class="book-cover">
-            {% if rec.image %}<img class="book-img" src="{{ rec.image }}" alt="{{ rec.title }} cover" loading="lazy" />{% endif %}
-            <div class="book-cover-placeholder" {% if rec.image %}style="display:none"{% endif %}>
-              <span class="icon">📖</span>
-              <span class="title-short">{{ rec.title[:30] }}</span>
+      <div class="col">
+        <a href="{{ url_for('book_detail', isbn=rec.isbn) }}" class="text-decoration-none">
+          <div class="card h-100 book-card shadow-sm position-relative">
+            <span class="badge bg-success position-absolute top-0 end-0 m-1" style="font-size:.6rem;">
+              {{ (rec.score * 100)|int }}%
+            </span>
+            <img src="{{ rec.image or '' }}" class="card-img-top book-img"
+                 alt="{{ rec.title }}" loading="lazy" onerror="this.style.display='none'" />
+            <div class="card-body p-2">
+              <p class="card-title small fw-bold mb-0 text-clamp">{{ rec.title }}</p>
+              <p class="text-muted mb-0" style="font-size:.72rem;">{{ rec.author }}</p>
             </div>
-            <div class="score-badge" aria-label="Match score {{ (rec.score * 100)|int }}%">{{ (rec.score * 100)|int }}%</div>
-          </div>
-          <div class="book-info">
-            <p class="book-title">{{ rec.title }}</p>
-            <p class="book-author">{{ rec.author }}</p>
-            {% if rec.year %}<p class="book-year">{{ rec.year }}</p>{% endif %}
-            {% if rec.stats and rec.stats.count > 0 %}
-            <div class="card-stars">
-              {% for i in range(1, 6) %}
-                <span class="s{% if i > rec.stats.avg|round %} off{% endif %}">★</span>
-              {% endfor %}
-              <span class="count">({{ rec.stats.count }})</span>
-            </div>
-            {% endif %}
           </div>
         </a>
-      </article>
+      </div>
       {% endfor %}
     </div>
   </section>
   {% endif %}
 
-  <!-- Reviews section -->
-  <section class="reviews-section" aria-labelledby="reviewsTitle">
-    <h2 class="section-title" id="reviewsTitle">Reviews</h2>
+  <!-- Reviews Section -->
+  <section class="container py-4" style="max-width:760px;">
+    <h2 class="section-title mb-4">Reviews</h2>
 
-    <!-- Write a review form -->
-    <div class="review-form-card">
-      <h3><i class="bi bi-pencil-square me-2 text-warning"></i>Write a Review</h3>
+    <!-- Review Form -->
+    <div class="card mb-4 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title mb-3">
+          <i class="bi bi-pencil-square me-2 text-warning"></i>Write a Review
+        </h5>
 
-      <form id="reviewForm" data-isbn="{{ book.isbn }}" novalidate>
-        <!-- Name -->
-        <div class="form-row">
-          <label for="reviewerName">Your Name</label>
-          <input type="text" id="reviewerName" class="form-control"
-                 placeholder="e.g. Jane Doe" maxlength="80"
-                 aria-describedby="nameHelp" />
-          <div id="nameHelp" class="form-text text-muted">Optional — leave blank to post as Anonymous.</div>
-          <div class="invalid-feedback" id="nameError"></div>
-        </div>
+        <form id="reviewForm" data-isbn="{{ book.isbn }}" novalidate>
 
-        <!-- Star picker -->
-        <div class="form-row">
-          <label>Rating <span class="text-danger">*</span></label>
-          <div class="star-picker" role="group" aria-label="Select star rating">
-            <span class="sp-star" data-val="1" role="radio" aria-label="1 star" tabindex="0">☆</span>
-            <span class="sp-star" data-val="2" role="radio" aria-label="2 stars" tabindex="0">☆</span>
-            <span class="sp-star" data-val="3" role="radio" aria-label="3 stars" tabindex="0">☆</span>
-            <span class="sp-star" data-val="4" role="radio" aria-label="4 stars" tabindex="0">☆</span>
-            <span class="sp-star" data-val="5" role="radio" aria-label="5 stars" tabindex="0">☆</span>
-            <span class="star-picker-label ms-2" id="starLabel">Select rating</span>
+          <div class="mb-3">
+            <label for="reviewerName" class="form-label">Your Name <span class="text-muted small">(optional)</span></label>
+            <input type="text" class="form-control" id="reviewerName"
+                   placeholder="e.g. Jane Doe" maxlength="80" />
+            <div class="invalid-feedback" id="nameError"></div>
           </div>
-          <input type="hidden" id="starValue" value="0" />
-          <div class="invalid-feedback" id="starsError"></div>
-        </div>
 
-        <!-- Comment -->
-        <div class="form-row">
-          <label for="reviewComment">Your Review <span class="text-danger">*</span></label>
-          <textarea id="reviewComment" class="form-control" rows="4"
-                    placeholder="Share what you thought about this book…"
-                    minlength="5" maxlength="2000"
-                    aria-describedby="commentHelp commentCount"></textarea>
-          <div class="d-flex justify-content-between mt-1">
-            <div id="commentHelp" class="form-text text-muted">Minimum 5 characters.</div>
-            <small id="commentCount" class="text-muted">0 / 2000</small>
+          <div class="mb-3">
+            <label class="form-label">Rating <span class="text-danger">*</span></label>
+            <div class="d-flex align-items-center gap-1">
+              <span class="sp-star fs-3" data-val="1" role="button" tabindex="0">☆</span>
+              <span class="sp-star fs-3" data-val="2" role="button" tabindex="0">☆</span>
+              <span class="sp-star fs-3" data-val="3" role="button" tabindex="0">☆</span>
+              <span class="sp-star fs-3" data-val="4" role="button" tabindex="0">☆</span>
+              <span class="sp-star fs-3" data-val="5" role="button" tabindex="0">☆</span>
+              <span class="ms-2 text-muted small" id="starLabel">Select rating</span>
+            </div>
+            <input type="hidden" id="starValue" value="0" />
+            <div class="text-danger small mt-1" id="starsError" style="display:none;"></div>
           </div>
-          <div class="invalid-feedback" id="commentError"></div>
-        </div>
 
-        <button type="submit" class="submit-review-btn"><i class="bi bi-send me-1"></i>Post Review</button>
-        <div class="review-success" id="reviewSuccess" role="alert" aria-live="polite">
-          <i class="bi bi-check-circle-fill me-2"></i> Review posted! Thank you.
-        </div>
-        <div class="review-error mt-2 text-danger small" id="reviewError" style="display:none;"></div>
-      </form>
+          <div class="mb-3">
+            <label for="reviewComment" class="form-label">Review <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="reviewComment" rows="4"
+                      placeholder="What did you think of this book?" maxlength="2000"></textarea>
+            <div class="d-flex justify-content-between mt-1">
+              <small class="text-muted">Min 5 characters.</small>
+              <small class="text-muted" id="commentCount">0 / 2000</small>
+            </div>
+            <div class="invalid-feedback" id="commentError"></div>
+          </div>
+
+          <button type="submit" class="btn btn-warning fw-bold">
+            <i class="bi bi-send me-1"></i>Post Review
+          </button>
+
+          <div class="alert alert-success mt-3 d-none" id="reviewSuccess" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>Review posted! Thank you.
+          </div>
+          <div class="text-danger small mt-2" id="reviewError" style="display:none;"></div>
+        </form>
+      </div>
     </div>
 
-    <!-- Existing reviews -->
-    <div id="reviewsList" class="reviews-list" aria-live="polite">
+    <!-- Reviews List -->
+    <div id="reviewsList">
       {% if reviews %}
         {% for r in reviews %}
-        <article class="review-card fade-in">
-          <div class="review-header">
-            <div>
-              <p class="reviewer-name">{{ r.name }}</p>
-              <div class="review-stars" aria-label="{{ r.stars }} out of 5">
-                {% for i in range(1, 6) %}
-                  <span class="star{% if i > r.stars %} off{% endif %}">★</span>
-                {% endfor %}
+        <div class="card mb-3 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
+              <div>
+                <strong>{{ r.name }}</strong>
+                <span class="text-warning ms-2">
+                  {{ '★' * r.stars }}{{ '☆' * (5 - r.stars) }}
+                </span>
               </div>
+              <small class="text-muted">{{ r.created }}</small>
             </div>
-            <time class="review-date" datetime="{{ r.created }}">{{ r.created }}</time>
+            <p class="mt-2 mb-0">{{ r.comment }}</p>
           </div>
-          <p class="review-text">{{ r.comment }}</p>
-        </article>
+        </div>
         {% endfor %}
       {% else %}
-      <div class="no-reviews" id="noReviewsPlaceholder">
-        <div class="icon">💬</div>
-        <p>No reviews yet — be the first!</p>
+      <div class="text-center text-muted py-4 border rounded" id="noReviewsPlaceholder">
+        <p class="fs-3 mb-1">💬</p>
+        <p class="mb-0">No reviews yet — be the first!</p>
       </div>
       {% endif %}
     </div>
   </section>
 
-  {% endif %}{# end page == detail #}
+  {% endif %}
 
 </main>
 
-<!-- ═══════════════════════════ FOOTER ═════════════════════════════════════ -->
-<footer>
-  <p>© 2025 <strong>Folio</strong> — Built with Flask, scikit-learn &amp; Bootstrap 5 &nbsp;·&nbsp; <a href="https://github.com/your-username/folio-book-recommender" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a></p>
+<!-- FOOTER -->
+<footer class="bg-dark text-white-50 text-center py-3 mt-5">
+  <small>
+    © 2026 <strong class="text-white">Folio</strong> — Flask · Bootstrap 5 · scikit-learn &nbsp;·&nbsp;
+    <a href="https://github.com/snehabhunia/ai-book-recommendations-review-system" class="text-warning" target="_blank">
+      <i class="bi bi-github"></i> GitHub
+    </a>
+  </small>
 </footer>
 
-<!-- Bootstrap 5 JS bundle (includes Popper) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<!-- Custom JS -->
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-
 </body>
 </html>
