@@ -1,16 +1,3 @@
-"""
-train_model.py  — Book Recommendation Model (Collaborative Filtering)
-
-Dataset: Books dataset from Kaggle
-  https://www.kaggle.com/datasets/arashnic/book-recommendation-dataset
-
-Download the 3 CSV files (Books.csv, Users.csv, Ratings.csv) and place them
-in the model/ folder, then run:
-    python model/train_model.py
-
-This will create model/model.pkl used by the Flask app.
-"""
-
 import pandas as pd
 import numpy as np
 from scipy.sparse import csr_matrix

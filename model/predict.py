@@ -1,7 +1,3 @@
-"""
-predict.py  — Recommendation & search helpers used by app.py
-"""
-
 import pickle, os, re
 import numpy as np
 

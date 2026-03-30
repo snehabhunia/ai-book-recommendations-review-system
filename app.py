@@ -1,8 +1,3 @@
-"""
-app.py  —  Folio: Book Reviews & Recommendations
-Flask entry-point: routes, SQLite review storage, REST API
-"""
-
 import os, json, sqlite3
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for
@@ -18,9 +13,7 @@ sys.path.insert(0, MODEL_DIR)
 
 app = Flask(__name__)
 
-# DATABASE  (SQLite — no external server needed)
-
-def get_db():
+def get_db():                           #datadase handling
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
@@ -52,10 +45,7 @@ def get_stats(isbn: str) -> dict:
     avg   = round(row["avg"], 1) if row["avg"] else 0.0
     return {"count": count, "avg": avg}
 
-
-# PREDICT HELPERS  (lazy-loads model)
-
-def _try_import():
+def _try_import():                  # PREDICT HELPERS 
     try:
         import predict
         return predict
@@ -64,7 +54,6 @@ def _try_import():
 
 
 # ROUTES
-
 @app.route("/")
 def index():
     """Home — show 20 trending books."""
